@@ -45,9 +45,7 @@ An interactive React application that visualizes Breadth-First Search (BFS) and 
 
 1. **Clone or Download the Project**
    ```bash
-   # If you have the project as a zip file, extract it
-   # If you have access to a git repository:
-   git clone <repository-url>
+   git clone https://github.com/AdidR10/NodeScape-Low_Bias_High_Variance.git
    cd NodeEscape
    ```
 
