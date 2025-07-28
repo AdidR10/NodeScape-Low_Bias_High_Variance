@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   nodescape:
-    image: asifmahmoud414/nodescape-graph-visualizer:0.0.1
+    image: ${DOCKERHUB_USERNAME:-asifmahmoud414}/nodescape-graph-visualizer:${IMAGE_TAG:-latest}
     ports:
       - "3000:80"
     container_name: nodescape-app-prod

@@ -92,7 +92,9 @@ docker run -d -p 3000:80 --name nodescape-app nodescape-graph-visualizer
 chmod +x scripts/deploy.sh
 
 # Run the deployment script
-./scripts/deploy.sh
+./scripts/deploy.sh                    # Build and run locally
+./scripts/deploy.sh --remote           # Use latest remote image
+IMAGE_TAG=1.0.5 ./scripts/deploy.sh   # Use specific version
 ```
 
 ### Building for Production
@@ -114,17 +116,33 @@ The application is containerized using a multi-stage Docker build:
 
 ### CI/CD Pipeline
 
-The project includes GitHub Actions for automated CI/CD:
+The project includes GitHub Actions for automated CI/CD with dynamic versioning:
 
 1. **Testing**: Runs on every push and pull request
    - Installs dependencies
    - Runs tests
    - Builds the application
 
-2. **Deployment**: Runs on main/master branch pushes
-   - Builds Docker image
-   - Pushes to Docker Hub
+2. **Deployment**: Runs on main/dev branch pushes
+   - Builds Docker image with dynamic versioning
+   - Pushes to Docker Hub with multiple tags
    - Uses GitHub Actions cache for faster builds
+
+### Dynamic Versioning
+
+The CI/CD pipeline automatically generates version numbers based on:
+- **Branch**: Determines the major version prefix
+- **Run Number**: GitHub Actions run number for the build number
+
+**Version Format**:
+- `main` branch: `1.0.{run_number}` (e.g., 1.0.5)
+- `dev` branch: `0.1.{run_number}` (e.g., 0.1.3)
+- Other branches: `0.0.{run_number}` (e.g., 0.0.2)
+
+**Tags Created**:
+- Version tag: `asifmahmoud414/nodescape-graph-visualizer:1.0.5`
+- Latest tag: `asifmahmoud414/nodescape-graph-visualizer:latest` (main branch)
+- Dev tag: `asifmahmoud414/nodescape-graph-visualizer:dev` (dev branch)
 
 ### Docker Hub Deployment
 
@@ -152,10 +170,19 @@ Once the image is pushed to Docker Hub, anyone can run it:
 
 ```bash
 # Pull and run the latest image
-docker run -d -p 3000:80 your-username/nodescape-graph-visualizer:latest
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:latest
+
+# Run a specific version
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:1.0.5
+
+# Run dev version
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:dev
 
 # Or use docker-compose with the remote image
 docker-compose -f docker-compose.prod.yml up -d
+
+# Use specific version with environment variables
+IMAGE_TAG=1.0.5 docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ## 📖 How to Use
