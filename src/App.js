@@ -3,6 +3,7 @@ import { Graph, GraphPresets } from './utils/graph';
 import { GraphAlgorithms } from './utils/graphAlgorithms';
 import GraphVisualization from './components/GraphVisualization';
 import ControlPanel from './components/ControlPanel';
+import AlgorithmExplanation from './components/AlgorithmExplanation';
 
 function App() {
   // Graph state
@@ -361,20 +362,7 @@ function App() {
       </header>
       
       <div className="main-content">
-        <GraphVisualization
-          graph={graph}
-          nodePositions={nodePositions}
-          setNodePositions={setNodePositions}
-          selectedNode={selectedNode}
-          isAddingEdge={isAddingEdge}
-          edgeStartNode={edgeStartNode}
-          currentStepData={getCurrentStepData()}
-          onNodeClick={handleNodeClick}
-          onAddNode={handleAddNode}
-          onRemoveNode={handleRemoveNode}
-          onRemoveEdge={handleRemoveEdge}
-        />
-        
+        {/* Control Panel - Left Side */}
         <ControlPanel
           graph={graph}
           currentAlgorithm={currentAlgorithm}
@@ -399,6 +387,31 @@ function App() {
           onResetVisualization={resetVisualization}
           onClearGraph={clearGraph}
           currentStepData={getCurrentStepData()}
+        />
+        
+        {/* Graph Visualization - Center */}
+        <GraphVisualization
+          graph={graph}
+          nodePositions={nodePositions}
+          setNodePositions={setNodePositions}
+          selectedNode={selectedNode}
+          isAddingEdge={isAddingEdge}
+          edgeStartNode={edgeStartNode}
+          currentStepData={getCurrentStepData()}
+          onNodeClick={handleNodeClick}
+          onAddNode={handleAddNode}
+          onRemoveNode={handleRemoveNode}
+          onRemoveEdge={handleRemoveEdge}
+        />
+        
+        {/* Algorithm Explanation - Right Side */}
+        <AlgorithmExplanation
+          currentAlgorithm={currentAlgorithm}
+          currentStepData={getCurrentStepData()}
+          algorithmSteps={algorithmSteps}
+          currentStepIndex={currentStepIndex}
+          visitedOrder={visitedOrder}
+          isPlaying={isPlaying}
         />
       </div>
     </div>
