@@ -6,6 +6,46 @@ An interactive React application that visualizes Breadth-First Search (BFS) and 
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow)
 ![SVG](https://img.shields.io/badge/Visualization-SVG-green)
 
+![Main UI](./resources/main_ui.png)
+
+### Keyboard Shortcuts
+![Keyboard Shortcuts](./resources/keyboard_shortcuts.png)
+
+The application includes comprehensive keyboard shortcuts for faster operation:
+
+#### Algorithm Controls
+- **Ctrl+R**: Run the selected algorithm
+- **Space**: Play/Pause algorithm playback
+- **← (Left Arrow)**: Previous step
+- **→ (Right Arrow)**: Next step
+- **Esc**: Reset visualization and cancel current operations
+
+#### Graph Operations
+- **E**: Toggle edge creation mode
+- **Delete/Backspace**: Remove selected node
+- **Ctrl+C**: Clear entire graph
+
+#### Algorithm Selection
+- **1**: Select BFS algorithm
+- **2**: Select DFS (Iterative) algorithm
+- **3**: Select DFS (Recursive) algorithm
+
+#### UI Controls
+- **H**: Toggle instructions visibility
+
+*Note: Keyboard shortcuts are disabled when typing in input fields.*
+
+
+### Graph Traversal Order Upon Completion
+![Traversal Order](./resources/traversal_order.png)
+
+### Graph Statistics
+![Stats](./resources/graph_statistics.png)
+
+### Real Time Information
+![Stats](./resources/real_time_info.png)
+
+
 ## 🌟 Features
 
 ### Core Functionality
@@ -217,32 +257,6 @@ Try different graph structures with one click:
 - **Cycle**: Nodes connected in a circular pattern
 - **Star**: One central node connected to all others
 - **Grid**: A 2D grid structure
-
-### Keyboard Shortcuts
-
-The application includes comprehensive keyboard shortcuts for faster operation:
-
-#### Algorithm Controls
-- **Ctrl+R**: Run the selected algorithm
-- **Space**: Play/Pause algorithm playback
-- **← (Left Arrow)**: Previous step
-- **→ (Right Arrow)**: Next step
-- **Esc**: Reset visualization and cancel current operations
-
-#### Graph Operations
-- **E**: Toggle edge creation mode
-- **Delete/Backspace**: Remove selected node
-- **Ctrl+C**: Clear entire graph
-
-#### Algorithm Selection
-- **1**: Select BFS algorithm
-- **2**: Select DFS (Iterative) algorithm
-- **3**: Select DFS (Recursive) algorithm
-
-#### UI Controls
-- **H**: Toggle instructions visibility
-
-*Note: Keyboard shortcuts are disabled when typing in input fields.*
 
 ### Advanced Features
 
