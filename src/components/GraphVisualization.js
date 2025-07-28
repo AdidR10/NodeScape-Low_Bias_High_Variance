@@ -18,6 +18,8 @@ const GraphVisualization = ({
   const [dragNode, setDragNode] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [contextMenu, setContextMenu] = useState(null);
+  const [tooltip, setTooltip] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   const nodeRadius = 25;
 
@@ -54,6 +56,15 @@ const GraphVisualization = ({
         
         setNodePositions(prev => new Map(prev.set(dragNode, { x: newX, y: newY })));
       }
+      
+      // Update mouse position for tooltip
+      if (svgRef.current) {
+        const rect = svgRef.current.getBoundingClientRect();
+        setMousePosition({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+      }
     };
 
     const handleMouseUp = () => {
@@ -65,6 +76,8 @@ const GraphVisualization = ({
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+    } else {
+      document.addEventListener('mousemove', handleMouseMove);
     }
 
     return () => {
@@ -121,6 +134,33 @@ const GraphVisualization = ({
     });
   }, []);
 
+  // Handle node hover for tooltip
+  const handleNodeMouseEnter = useCallback((e, nodeId) => {
+    const neighbors = graph.getNeighbors(nodeId);
+    const degree = graph.getDegree(nodeId);
+    const isStartNode = currentStepData?.startNode === nodeId;
+    const isVisited = currentStepData?.visited?.has(nodeId);
+    const isCurrent = currentStepData?.currentNode === nodeId;
+    
+    let status = 'Normal';
+    if (isStartNode) status = 'Start Node';
+    else if (isCurrent) status = 'Current Node';
+    else if (isVisited) status = 'Visited';
+    
+    setTooltip({
+      content: `Node ${nodeId}
+Degree: ${degree}
+Neighbors: ${neighbors.join(', ') || 'None'}
+Status: ${status}`,
+      x: e.clientX + 10,
+      y: e.clientY - 10
+    });
+  }, [graph, currentStepData]);
+
+  const handleNodeMouseLeave = useCallback(() => {
+    setTooltip(null);
+  }, []);
+
   // Close context menu
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -134,17 +174,20 @@ const GraphVisualization = ({
       fill: '#6c757d',
       stroke: '#495057',
       strokeWidth: 2,
-      cursor: isDragging ? 'grabbing' : 'pointer'
+      cursor: isDragging ? 'grabbing' : 'pointer',
+      filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))'
     };
 
     if (selectedNode === nodeId) {
-      baseStyle.stroke = '#007bff';
+      baseStyle.stroke = '#00d4ff';
       baseStyle.strokeWidth = 3;
+      baseStyle.filter = 'drop-shadow(0 4px 8px rgba(0, 212, 255, 0.3))';
     }
 
     if (edgeStartNode === nodeId) {
       baseStyle.fill = '#ffc107';
       baseStyle.stroke = '#e0a800';
+      baseStyle.filter = 'drop-shadow(0 4px 8px rgba(255, 193, 7, 0.3))';
     }
 
     if (currentStepData) {
@@ -152,9 +195,18 @@ const GraphVisualization = ({
         baseStyle.fill = '#ffc107';
         baseStyle.stroke = '#333';
         baseStyle.strokeWidth = 4;
+        baseStyle.filter = 'drop-shadow(0 4px 8px rgba(255, 193, 7, 0.4))';
       } else if (currentStepData.visited && currentStepData.visited.has(nodeId)) {
         baseStyle.fill = '#28a745';
         baseStyle.stroke = '#1e7e34';
+        baseStyle.filter = 'drop-shadow(0 4px 8px rgba(40, 167, 69, 0.3))';
+      }
+      
+      // Start node styling
+      if (currentStepData.startNode === nodeId) {
+        baseStyle.fill = '#00d4ff';
+        baseStyle.stroke = '#0099cc';
+        baseStyle.filter = 'drop-shadow(0 0 10px rgba(0, 212, 255, 0.5))';
       }
     }
 
@@ -164,9 +216,10 @@ const GraphVisualization = ({
   // Get edge style based on current algorithm step
   const getEdgeStyle = useCallback((node1, node2) => {
     const baseStyle = {
-      stroke: '#6c757d',
+      stroke: '#666666',
       strokeWidth: 2,
-      cursor: 'pointer'
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
     };
 
     if (currentStepData && currentStepData.parent) {
@@ -176,6 +229,7 @@ const GraphVisualization = ({
       if (parent1 === node2 || parent2 === node1) {
         baseStyle.stroke = '#28a745';
         baseStyle.strokeWidth = 3;
+        baseStyle.filter = 'drop-shadow(0 2px 4px rgba(40, 167, 69, 0.3))';
       }
     }
 
@@ -201,6 +255,14 @@ const GraphVisualization = ({
           y2={pos2.y}
           style={edgeStyle}
           onContextMenu={(e) => handleEdgeRightClick(e, node1, node2)}
+          onMouseEnter={(e) => {
+            setTooltip({
+              content: `Edge: ${node1} ↔ ${node2}`,
+              x: e.clientX + 10,
+              y: e.clientY - 10
+            });
+          }}
+          onMouseLeave={() => setTooltip(null)}
         />
       );
     });
@@ -229,6 +291,8 @@ const GraphVisualization = ({
               }
             }}
             onContextMenu={(e) => handleNodeRightClick(e, nodeId)}
+            onMouseEnter={(e) => handleNodeMouseEnter(e, nodeId)}
+            onMouseLeave={handleNodeMouseLeave}
           />
           <text
             x={position.x}
@@ -253,25 +317,38 @@ const GraphVisualization = ({
           position: 'absolute',
           left: contextMenu.x,
           top: contextMenu.y,
-          background: 'white',
-          border: '1px solid #ccc',
-          borderRadius: '4px',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          background: '#2a2a2a',
+          border: '1px solid #404040',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
           zIndex: 1000,
-          minWidth: '120px'
+          minWidth: '140px',
+          overflow: 'hidden'
         }}
       >
         {contextMenu.nodeId && (
           <div>
             <button
-              className="button"
-              style={{ width: '100%', margin: 0, borderRadius: 0 }}
+              className="button danger"
+              style={{ 
+                width: '100%', 
+                margin: 0, 
+                borderRadius: 0,
+                border: 'none',
+                padding: '0.75rem 1rem',
+                background: '#dc3545',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#c82333'}
+              onMouseLeave={(e) => e.target.style.background = '#dc3545'}
               onClick={() => {
                 onRemoveNode(contextMenu.nodeId);
                 setContextMenu(null);
               }}
             >
-              Remove Node
+              🗑️ Remove Node
             </button>
           </div>
         )}
@@ -279,13 +356,25 @@ const GraphVisualization = ({
           <div>
             <button
               className="button danger"
-              style={{ width: '100%', margin: 0, borderRadius: 0 }}
+              style={{ 
+                width: '100%', 
+                margin: 0, 
+                borderRadius: 0,
+                border: 'none',
+                padding: '0.75rem 1rem',
+                background: '#dc3545',
+                color: 'white',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#c82333'}
+              onMouseLeave={(e) => e.target.style.background = '#dc3545'}
               onClick={() => {
                 onRemoveEdge(contextMenu.edge[0], contextMenu.edge[1]);
                 setContextMenu(null);
               }}
             >
-              Remove Edge
+              🔗 Remove Edge
             </button>
           </div>
         )}
@@ -293,72 +382,81 @@ const GraphVisualization = ({
     );
   };
 
-  return (
-    <div className="graph-container" style={{ position: 'relative' }}>
-      <svg
-        ref={svgRef}
-        className="graph-svg"
-        width="100%"
-        height="600px"
-        onClick={handleSvgClick}
-        style={{ 
-          background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
-          cursor: isAddingEdge ? 'crosshair' : 'default'
+  // Render tooltip
+  const renderTooltip = () => {
+    if (!tooltip) return null;
+
+    return (
+      <div
+        className="tooltip show"
+        style={{
+          position: 'fixed',
+          left: tooltip.x,
+          top: tooltip.y,
+          background: 'rgba(0, 0, 0, 0.9)',
+          color: 'white',
+          padding: '0.75rem',
+          borderRadius: '6px',
+          fontSize: '0.85rem',
+          zIndex: 1000,
+          pointerEvents: 'none',
+          maxWidth: '250px',
+          whiteSpace: 'pre-line',
+          lineHeight: '1.4',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          border: '1px solid rgba(255,255,255,0.1)'
         }}
       >
-        {/* Grid pattern for better UX */}
-        <defs>
-          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#dee2e6" strokeWidth="0.5" opacity="0.5"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-        
-        {/* Render edges first (so they appear behind nodes) */}
-        <g className="edges">
-          {renderEdges()}
-        </g>
-        
-        {/* Render nodes */}
-        <g className="nodes">
-          {renderNodes()}
-        </g>
-        
-        {/* Edge preview when adding edge */}
-        {isAddingEdge && edgeStartNode && (
-          <line
-            x1={nodePositions.get(edgeStartNode)?.x || 0}
-            y1={nodePositions.get(edgeStartNode)?.y || 0}
-            x2={nodePositions.get(edgeStartNode)?.x || 0}
-            y2={nodePositions.get(edgeStartNode)?.y || 0}
-            stroke="#ffc107"
-            strokeWidth="2"
-            strokeDasharray="5,5"
-            style={{ pointerEvents: 'none' }}
-          />
-        )}
-      </svg>
+        {tooltip.content}
+      </div>
+    );
+  };
+
+  return (
+    <div className="graph-container" style={{ position: 'relative' }}>
+      {/* Graph Header */}
+      <div className="graph-header">
+        <h2>🎯 Interactive Graph Visualization</h2>
+        <p>Click to add nodes • Drag to move • Right-click for options • Hover for info</p>
+      </div>
       
-      {/* Interaction hints */}
-      <div style={{
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        background: 'rgba(255,255,255,0.9)',
-        padding: '8px 12px',
-        borderRadius: '6px',
-        fontSize: '0.8rem',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        {isAddingEdge ? (
-          <span style={{ color: '#e0a800' }}>
-            🔗 Click on a second node to create an edge
-          </span>
-        ) : (
-          <span style={{ color: '#666' }}>
-            💡 Click to add nodes • Drag to move • Right-click for options
-          </span>
-        )}
+      {/* Graph Content */}
+      <div className="graph-content">
+        <svg
+          ref={svgRef}
+          className="graph-svg"
+          width="100%"
+          height="100%"
+          onClick={handleSvgClick}
+          style={{ 
+            background: 'transparent',
+            cursor: isAddingEdge ? 'crosshair' : 'default'
+          }}
+        >
+          {/* Render edges first (so they appear behind nodes) */}
+          <g className="edges">
+            {renderEdges()}
+          </g>
+          
+          {/* Render nodes */}
+          <g className="nodes">
+            {renderNodes()}
+          </g>
+          
+          {/* Edge preview when adding edge */}
+          {isAddingEdge && edgeStartNode && (
+            <line
+              x1={nodePositions.get(edgeStartNode)?.x || 0}
+              y1={nodePositions.get(edgeStartNode)?.y || 0}
+              x2={mousePosition.x}
+              y2={mousePosition.y}
+              stroke="#ffc107"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+              style={{ pointerEvents: 'none' }}
+            />
+          )}
+        </svg>
       </div>
       
       {/* Algorithm step info */}
@@ -367,18 +465,30 @@ const GraphVisualization = ({
           position: 'absolute',
           bottom: '10px',
           left: '10px',
-          background: 'rgba(0,0,0,0.8)',
+          background: 'rgba(0,0,0,0.9)',
           color: 'white',
-          padding: '8px 12px',
-          borderRadius: '6px',
+          padding: '12px 16px',
+          borderRadius: '8px',
           fontSize: '0.9rem',
-          maxWidth: '300px'
+          maxWidth: '350px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          zIndex: 10
         }}>
-          {currentStepData.action}
+          <div style={{ fontWeight: '600', marginBottom: '0.25rem' }}>
+            🎯 {currentStepData.action}
+          </div>
+          {currentStepData.currentNode && (
+            <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>
+              Current: {currentStepData.currentNode} | 
+              Visited: {Array.from(currentStepData.visited || []).length} nodes
+            </div>
+          )}
         </div>
       )}
       
       {renderContextMenu()}
+      {renderTooltip()}
     </div>
   );
 };

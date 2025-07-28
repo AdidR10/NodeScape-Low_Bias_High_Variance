@@ -3,6 +3,8 @@ import { Graph, GraphPresets } from './utils/graph';
 import { GraphAlgorithms } from './utils/graphAlgorithms';
 import GraphVisualization from './components/GraphVisualization';
 import ControlPanel from './components/ControlPanel';
+import ExplanationPanel from './components/ExplanationPanel';
+import Notification from './components/Notification';
 
 function App() {
   // Graph state
@@ -23,6 +25,14 @@ function App() {
   const [edgeStartNode, setEdgeStartNode] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   
+  // Notification state
+  const [notification, setNotification] = useState(null);
+
+  // Show notification helper
+  const showNotification = useCallback((message, type = 'info') => {
+    setNotification({ message, type });
+  }, []);
+
   // Generate automatic layout for nodes
   const generateLayout = useCallback((graph) => {
     const nodes = graph.getNodes();
@@ -56,11 +66,112 @@ function App() {
   useEffect(() => {
     generateLayout(graph);
   }, [graph, generateLayout]);
+
+  // Keyboard event handlers
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Prevent default behavior for specific keys
+      if (['Space', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Delete'].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      switch (e.code) {
+        case 'Space':
+          if (algorithmSteps.length > 0) {
+            setIsPlaying(!isPlaying);
+            showNotification(isPlaying ? 'Paused' : 'Playing', 'info');
+          } else {
+            runAlgorithm();
+          }
+          break;
+        
+        case 'KeyR':
+          runAlgorithm();
+          break;
+        
+        case 'KeyC':
+          clearGraph();
+          break;
+        
+        case 'KeyE':
+          setIsAddingEdge(!isAddingEdge);
+          showNotification(isAddingEdge ? 'Edge mode disabled' : 'Edge mode enabled', 'info');
+          break;
+        
+        case 'KeyA':
+          showNotification('Click anywhere to add a node', 'info');
+          break;
+        
+        case 'Delete':
+          if (selectedNode) {
+            handleRemoveNode(selectedNode);
+            showNotification(`Node ${selectedNode} removed`, 'success');
+          }
+          break;
+        
+        case 'ArrowLeft':
+          if (currentStepIndex > -1) {
+            setCurrentStepIndex(currentStepIndex - 1);
+          }
+          break;
+        
+        case 'ArrowRight':
+          if (currentStepIndex < algorithmSteps.length - 1) {
+            setCurrentStepIndex(currentStepIndex + 1);
+          }
+          break;
+        
+        case 'Home':
+          setCurrentStepIndex(-1);
+          setIsPlaying(false);
+          break;
+        
+        case 'End':
+          setCurrentStepIndex(algorithmSteps.length - 1);
+          setIsPlaying(false);
+          break;
+        
+        case 'KeyH':
+          setShowInstructions(!showInstructions);
+          break;
+        
+        // Number keys for presets
+        case 'Digit1':
+          loadPreset('linear');
+          break;
+        case 'Digit2':
+          loadPreset('binary-tree');
+          break;
+        case 'Digit3':
+          loadPreset('complete');
+          break;
+        case 'Digit4':
+          loadPreset('cycle');
+          break;
+        case 'Digit5':
+          loadPreset('star');
+          break;
+        case 'Digit6':
+          loadPreset('grid');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    isPlaying, 
+    algorithmSteps.length, 
+    currentStepIndex, 
+    selectedNode, 
+    isAddingEdge, 
+    showInstructions
+  ]);
   
   // Algorithm execution
   const runAlgorithm = useCallback(() => {
     if (!graph.getNodes().includes(startNode)) {
-      alert(`Start node "${startNode}" does not exist in the graph!`);
+      showNotification(`Start node "${startNode}" does not exist in the graph!`, 'error');
       return;
     }
     
@@ -82,7 +193,8 @@ function App() {
     setAlgorithmSteps(result.steps);
     setCurrentStepIndex(-1);
     setIsPlaying(false);
-  }, [graph, startNode, currentAlgorithm]);
+    showNotification(`${currentAlgorithm.toUpperCase()} algorithm started from node ${startNode}`, 'success');
+  }, [graph, startNode, currentAlgorithm, showNotification]);
   
   // Playback control
   useEffect(() => {
@@ -92,6 +204,7 @@ function App() {
         setCurrentStepIndex(prev => {
           if (prev >= algorithmSteps.length - 1) {
             setIsPlaying(false);
+            showNotification('Algorithm completed!', 'success');
             return prev;
           }
           return prev + 1;
@@ -99,7 +212,7 @@ function App() {
       }, playbackSpeed);
     }
     return () => clearInterval(interval);
-  }, [isPlaying, currentStepIndex, algorithmSteps.length, playbackSpeed]);
+  }, [isPlaying, currentStepIndex, algorithmSteps.length, playbackSpeed, showNotification]);
   
   // Graph manipulation handlers
   const handleNodeClick = useCallback((nodeId) => {
@@ -107,6 +220,7 @@ function App() {
       if (edgeStartNode === null) {
         setEdgeStartNode(nodeId);
         setSelectedNode(nodeId);
+        showNotification(`Select second node to create edge from ${nodeId}`, 'info');
       } else if (edgeStartNode !== nodeId) {
         // Add edge
         const newGraph = graph.clone();
@@ -115,16 +229,18 @@ function App() {
         setIsAddingEdge(false);
         setEdgeStartNode(null);
         setSelectedNode(null);
+        showNotification(`Edge created between ${edgeStartNode} and ${nodeId}`, 'success');
       } else {
         // Cancel edge creation
         setIsAddingEdge(false);
         setEdgeStartNode(null);
         setSelectedNode(null);
+        showNotification('Edge creation cancelled', 'info');
       }
     } else {
       setSelectedNode(selectedNode === nodeId ? null : nodeId);
     }
-  }, [isAddingEdge, edgeStartNode, selectedNode, graph]);
+  }, [isAddingEdge, edgeStartNode, selectedNode, graph, showNotification]);
   
   const handleAddNode = useCallback((x, y) => {
     if (isAddingEdge) return;
@@ -146,7 +262,8 @@ function App() {
     
     // Set position for new node
     setNodePositions(prev => new Map(prev.set(nextNodeName, { x, y })));
-  }, [graph, isAddingEdge]);
+    showNotification(`Node ${nextNodeName} added`, 'success');
+  }, [graph, isAddingEdge, showNotification]);
   
   const handleRemoveNode = useCallback((nodeId) => {
     const newGraph = graph.clone();
@@ -178,10 +295,20 @@ function App() {
     const newGraph = graph.clone();
     newGraph.removeEdge(node1, node2);
     setGraph(newGraph);
-  }, [graph]);
+    showNotification(`Edge between ${node1} and ${node2} removed`, 'success');
+  }, [graph, showNotification]);
   
   const loadPreset = useCallback((presetName) => {
     let newGraph;
+    const presetNames = {
+      'linear': 'Linear',
+      'binary-tree': 'Binary Tree',
+      'complete': 'Complete',
+      'cycle': 'Cycle',
+      'star': 'Star',
+      'grid': 'Grid'
+    };
+    
     switch (presetName) {
       case 'linear':
         newGraph = GraphPresets.linear(5);
@@ -213,13 +340,15 @@ function App() {
     setSelectedNode(null);
     setIsAddingEdge(false);
     setEdgeStartNode(null);
-  }, []);
+    showNotification(`${presetNames[presetName]} graph loaded`, 'success');
+  }, [showNotification]);
   
   const resetVisualization = useCallback(() => {
     setAlgorithmSteps([]);
     setCurrentStepIndex(-1);
     setIsPlaying(false);
-  }, []);
+    showNotification('Visualization reset', 'info');
+  }, [showNotification]);
   
   const clearGraph = useCallback(() => {
     setGraph(new Graph());
@@ -230,7 +359,8 @@ function App() {
     setIsAddingEdge(false);
     setEdgeStartNode(null);
     setStartNode('A');
-  }, []);
+    showNotification('Graph cleared', 'success');
+  }, [showNotification]);
   
   // Get current step data for visualization
   const getCurrentStepData = () => {
@@ -250,20 +380,6 @@ function App() {
       </header>
       
       <div className="main-content">
-        <GraphVisualization
-          graph={graph}
-          nodePositions={nodePositions}
-          setNodePositions={setNodePositions}
-          selectedNode={selectedNode}
-          isAddingEdge={isAddingEdge}
-          edgeStartNode={edgeStartNode}
-          currentStepData={getCurrentStepData()}
-          onNodeClick={handleNodeClick}
-          onAddNode={handleAddNode}
-          onRemoveNode={handleRemoveNode}
-          onRemoveEdge={handleRemoveEdge}
-        />
-        
         <ControlPanel
           graph={graph}
           currentAlgorithm={currentAlgorithm}
@@ -288,7 +404,36 @@ function App() {
           onClearGraph={clearGraph}
           currentStepData={getCurrentStepData()}
         />
+        
+        <GraphVisualization
+          graph={graph}
+          nodePositions={nodePositions}
+          setNodePositions={setNodePositions}
+          selectedNode={selectedNode}
+          isAddingEdge={isAddingEdge}
+          edgeStartNode={edgeStartNode}
+          currentStepData={getCurrentStepData()}
+          onNodeClick={handleNodeClick}
+          onAddNode={handleAddNode}
+          onRemoveNode={handleRemoveNode}
+          onRemoveEdge={handleRemoveEdge}
+        />
+        
+        <ExplanationPanel
+          currentAlgorithm={currentAlgorithm}
+          currentStepData={getCurrentStepData()}
+          algorithmSteps={algorithmSteps}
+          currentStepIndex={currentStepIndex}
+          graph={graph}
+        />
       </div>
+
+      {/* Notification */}
+      <Notification
+        message={notification?.message}
+        type={notification?.type}
+        onClose={() => setNotification(null)}
+      />
     </div>
   );
 }

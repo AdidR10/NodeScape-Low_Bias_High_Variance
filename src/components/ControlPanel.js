@@ -1,5 +1,6 @@
-import React from 'react';
-import { Play, Pause, SkipBack, SkipForward, Square, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Pause, SkipBack, SkipForward, Square, RotateCcw, HelpCircle, Keyboard } from 'lucide-react';
+import KeyboardShortcuts from './KeyboardShortcuts';
 
 const ControlPanel = ({
   graph,
@@ -27,6 +28,7 @@ const ControlPanel = ({
 }) => {
   const nodes = graph.getNodes();
   const stats = graph.getStatistics();
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   // Playback control handlers
   const handlePlay = () => {
@@ -64,19 +66,22 @@ const ControlPanel = ({
       name: 'Breadth-First Search (BFS)',
       description: 'Explores nodes level by level using a queue. Guarantees shortest path in unweighted graphs.',
       timeComplexity: 'O(V + E)',
-      spaceComplexity: 'O(V)'
+      spaceComplexity: 'O(V)',
+      icon: '🔄'
     },
     'dfs': {
       name: 'Depth-First Search (DFS) - Iterative',
       description: 'Explores as far as possible along each branch using a stack before backtracking.',
       timeComplexity: 'O(V + E)',
-      spaceComplexity: 'O(V)'
+      spaceComplexity: 'O(V)',
+      icon: '🔽'
     },
     'dfs-recursive': {
       name: 'Depth-First Search (DFS) - Recursive',
       description: 'Explores using function call stack. Shows recursive call structure.',
       timeComplexity: 'O(V + E)',
-      spaceComplexity: 'O(V)'
+      spaceComplexity: 'O(V)',
+      icon: '🔄'
     }
   };
 
@@ -88,7 +93,7 @@ const ControlPanel = ({
       {showInstructions && (
         <div className="control-section">
           <div className="instructions">
-            <h4>How to Use</h4>
+            <h4>🎯 How to Use</h4>
             <ul>
               <li>Click on empty space to add nodes</li>
               <li>Drag nodes to reposition them</li>
@@ -96,21 +101,46 @@ const ControlPanel = ({
               <li>Right-click on nodes/edges to delete</li>
               <li>Select start node and algorithm</li>
               <li>Click "Run Algorithm" to begin</li>
+              <li>Use keyboard shortcuts for quick actions</li>
             </ul>
-            <button 
-              className="button secondary"
-              onClick={() => setShowInstructions(false)}
-              style={{ fontSize: '0.8rem', padding: '0.5rem' }}
-            >
-              Hide Instructions
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+              <button 
+                className="button secondary"
+                onClick={() => setShowInstructions(false)}
+                style={{ fontSize: '0.8rem', padding: '0.5rem' }}
+              >
+                Hide Instructions
+              </button>
+              <button 
+                className="button secondary"
+                onClick={() => setShowShortcuts(!showShortcuts)}
+                style={{ fontSize: '0.8rem', padding: '0.5rem' }}
+              >
+                <Keyboard size={14} style={{ marginRight: '0.25rem' }} />
+                Shortcuts
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts */}
+      {showShortcuts && (
+        <div className="control-section">
+          <KeyboardShortcuts />
+          <button 
+            className="button secondary"
+            onClick={() => setShowShortcuts(false)}
+            style={{ fontSize: '0.8rem', padding: '0.5rem', width: '100%' }}
+          >
+            Hide Shortcuts
+          </button>
         </div>
       )}
 
       {/* Algorithm Selection */}
       <div className="control-section">
-        <h3 className="section-title">Algorithm</h3>
+        <h3 className="section-title">🚀 Algorithm</h3>
         <div className="input-group">
           <label className="input-label">Select Algorithm:</label>
           <select 
@@ -118,27 +148,27 @@ const ControlPanel = ({
             value={currentAlgorithm}
             onChange={(e) => setCurrentAlgorithm(e.target.value)}
           >
-            <option value="bfs">Breadth-First Search (BFS)</option>
-            <option value="dfs">Depth-First Search (DFS) - Iterative</option>
-            <option value="dfs-recursive">Depth-First Search (DFS) - Recursive</option>
+            <option value="bfs">🔄 Breadth-First Search (BFS)</option>
+            <option value="dfs">🔽 Depth-First Search (DFS) - Iterative</option>
+            <option value="dfs-recursive">🔄 Depth-First Search (DFS) - Recursive</option>
           </select>
         </div>
 
         <div className="algorithm-info">
-          <h4>{currentAlgorithmInfo.name}</h4>
+          <h4>{currentAlgorithmInfo.icon} {currentAlgorithmInfo.name}</h4>
           <p>{currentAlgorithmInfo.description}</p>
           <div style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
-            <div><strong>Time:</strong> {currentAlgorithmInfo.timeComplexity}</div>
-            <div><strong>Space:</strong> {currentAlgorithmInfo.spaceComplexity}</div>
+            <div><strong>⏱️ Time:</strong> {currentAlgorithmInfo.timeComplexity}</div>
+            <div><strong>💾 Space:</strong> {currentAlgorithmInfo.spaceComplexity}</div>
           </div>
         </div>
       </div>
 
       {/* Start Node Selection */}
       <div className="control-section">
-        <h3 className="section-title">Configuration</h3>
+        <h3 className="section-title">⚙️ Configuration</h3>
         <div className="input-group">
-          <label className="input-label">Start Node:</label>
+          <label className="input-label">🎯 Start Node:</label>
           <select 
             className="input-field"
             value={startNode}
@@ -153,7 +183,7 @@ const ControlPanel = ({
 
         <div className="input-group">
           <label className="input-label">
-            Animation Speed: {playbackSpeed}ms
+            🎬 Animation Speed: {playbackSpeed}ms
           </label>
           <input
             type="range"
@@ -169,20 +199,22 @@ const ControlPanel = ({
 
       {/* Algorithm Controls */}
       <div className="control-section">
-        <h3 className="section-title">Controls</h3>
+        <h3 className="section-title">🎮 Controls</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className="button"
             onClick={onRunAlgorithm}
             disabled={nodes.length === 0}
+            title="Run the selected algorithm (R)"
           >
-            Run Algorithm
+            ▶️ Run Algorithm
           </button>
           <button 
             className="button secondary"
             onClick={onResetVisualization}
             disabled={algorithmSteps.length === 0}
+            title="Reset visualization to start"
           >
             <RotateCcw size={16} style={{ marginRight: '0.5rem' }} />
             Reset
@@ -197,6 +229,7 @@ const ControlPanel = ({
                 className="button secondary"
                 onClick={handleStepBackward}
                 disabled={currentStepIndex <= -1}
+                title="Previous step (←)"
               >
                 <SkipBack size={16} />
               </button>
@@ -205,6 +238,7 @@ const ControlPanel = ({
                 className="button"
                 onClick={handlePlay}
                 disabled={currentStepIndex >= algorithmSteps.length - 1 && !isPlaying}
+                title="Play/Pause (Space)"
               >
                 {isPlaying ? <Pause size={16} /> : <Play size={16} />}
               </button>
@@ -212,6 +246,7 @@ const ControlPanel = ({
               <button 
                 className="button secondary"
                 onClick={handleStop}
+                title="Stop animation"
               >
                 <Square size={16} />
               </button>
@@ -220,6 +255,7 @@ const ControlPanel = ({
                 className="button secondary"
                 onClick={handleStepForward}
                 disabled={currentStepIndex >= algorithmSteps.length - 1}
+                title="Next step (→)"
               >
                 <SkipForward size={16} />
               </button>
@@ -227,7 +263,7 @@ const ControlPanel = ({
             
             <div className="input-group">
               <label className="input-label">
-                Step: {currentStepIndex + 1} / {algorithmSteps.length}
+                📊 Step: {currentStepIndex + 1} / {algorithmSteps.length}
               </label>
               <input
                 type="range"
@@ -244,20 +280,22 @@ const ControlPanel = ({
 
       {/* Graph Operations */}
       <div className="control-section">
-        <h3 className="section-title">Graph Operations</h3>
+        <h3 className="section-title">🔧 Graph Operations</h3>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1rem' }}>
           <button 
             className={`button ${isAddingEdge ? 'success' : 'secondary'}`}
             onClick={() => setIsAddingEdge(!isAddingEdge)}
+            title="Toggle edge creation mode (E)"
           >
-            {isAddingEdge ? 'Cancel Edge' : 'Add Edge'}
+            {isAddingEdge ? '❌ Cancel Edge' : '🔗 Add Edge'}
           </button>
           <button 
             className="button danger"
             onClick={onClearGraph}
+            title="Clear entire graph (C)"
           >
-            Clear Graph
+            🗑️ Clear Graph
           </button>
         </div>
 
@@ -266,60 +304,89 @@ const ControlPanel = ({
             background: '#e3f2fd', 
             padding: '0.75rem', 
             borderRadius: '6px',
-            fontSize: '0.9rem'
+            fontSize: '0.9rem',
+            border: '1px solid #bbdefb'
           }}>
-            <strong>Selected:</strong> Node {selectedNode}
+            <strong>🎯 Selected:</strong> Node {selectedNode}
             <br />
-            <strong>Degree:</strong> {graph.getDegree(selectedNode)}
+            <strong>📊 Degree:</strong> {graph.getDegree(selectedNode)}
             <br />
-            <strong>Neighbors:</strong> {graph.getNeighbors(selectedNode).join(', ') || 'None'}
+            <strong>🔗 Neighbors:</strong> {graph.getNeighbors(selectedNode).join(', ') || 'None'}
+            <br />
+            <small style={{ color: '#666', marginTop: '0.25rem', display: 'block' }}>
+              Press Delete to remove this node
+            </small>
           </div>
         )}
       </div>
 
       {/* Graph Presets */}
       <div className="control-section">
-        <h3 className="section-title">Graph Presets</h3>
+        <h3 className="section-title">📋 Graph Presets</h3>
         <div className="preset-buttons">
-          <button className="preset-button button" onClick={() => onLoadPreset('linear')}>
-            Linear
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('linear')}
+            title="Load linear graph (1)"
+          >
+            📏 Linear
           </button>
-          <button className="preset-button button" onClick={() => onLoadPreset('binary-tree')}>
-            Binary Tree
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('binary-tree')}
+            title="Load binary tree (2)"
+          >
+            🌳 Binary Tree
           </button>
-          <button className="preset-button button" onClick={() => onLoadPreset('complete')}>
-            Complete
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('complete')}
+            title="Load complete graph (3)"
+          >
+            🔗 Complete
           </button>
-          <button className="preset-button button" onClick={() => onLoadPreset('cycle')}>
-            Cycle
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('cycle')}
+            title="Load cycle graph (4)"
+          >
+            🔄 Cycle
           </button>
-          <button className="preset-button button" onClick={() => onLoadPreset('star')}>
-            Star
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('star')}
+            title="Load star graph (5)"
+          >
+            ⭐ Star
           </button>
-          <button className="preset-button button" onClick={() => onLoadPreset('grid')}>
-            Grid
+          <button 
+            className="preset-button button" 
+            onClick={() => onLoadPreset('grid')}
+            title="Load grid graph (6)"
+          >
+            📐 Grid
           </button>
         </div>
       </div>
 
       {/* Graph Statistics */}
       <div className="control-section">
-        <h3 className="section-title">Graph Statistics</h3>
+        <h3 className="section-title">📈 Graph Statistics</h3>
         <div className="stats-grid">
           <div className="stat-item">
-            <div className="stat-label">Nodes</div>
+            <div className="stat-label">🔵 Nodes</div>
             <div className="stat-value">{stats.nodeCount}</div>
           </div>
           <div className="stat-item">
-            <div className="stat-label">Edges</div>
+            <div className="stat-label">🔗 Edges</div>
             <div className="stat-value">{stats.edgeCount}</div>
           </div>
           <div className="stat-item">
-            <div className="stat-label">Connected</div>
-            <div className="stat-value">{stats.isConnected ? 'Yes' : 'No'}</div>
+            <div className="stat-label">🔗 Connected</div>
+            <div className="stat-value">{stats.isConnected ? '✅' : '❌'}</div>
           </div>
           <div className="stat-item">
-            <div className="stat-label">Max Degree</div>
+            <div className="stat-label">📊 Max Degree</div>
             <div className="stat-value">{stats.maxDegree}</div>
           </div>
         </div>
@@ -328,12 +395,12 @@ const ControlPanel = ({
       {/* Algorithm State Display */}
       {currentStepData && (
         <div className="control-section">
-          <h3 className="section-title">Algorithm State</h3>
+          <h3 className="section-title">🎯 Algorithm State</h3>
           
           {currentStepData.currentNode && (
             <div className="algorithm-info">
-              <h4>Current Node: {currentStepData.currentNode}</h4>
-              <p>Visited Nodes: {Array.from(currentStepData.visited || []).join(', ') || 'None'}</p>
+              <h4>🎯 Current Node: {currentStepData.currentNode}</h4>
+              <p>✅ Visited Nodes: {Array.from(currentStepData.visited || []).join(', ') || 'None'}</p>
             </div>
           )}
 
@@ -341,8 +408,8 @@ const ControlPanel = ({
           {(currentStepData.queue || currentStepData.stack || currentStepData.callStack) && (
             <div className="queue-stack-display">
               <h4>
-                {currentStepData.queue ? 'Queue' : 
-                 currentStepData.stack ? 'Stack' : 'Call Stack'}:
+                {currentStepData.queue ? '📋 Queue' : 
+                 currentStepData.stack ? '📚 Stack' : '📞 Call Stack'}:
               </h4>
               <div className="queue-stack-items">
                 {(currentStepData.queue || currentStepData.stack || currentStepData.callStack || []).map((item, index) => (
