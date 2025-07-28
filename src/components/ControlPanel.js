@@ -19,6 +19,7 @@ const ControlPanel = ({
   setIsAddingEdge,
   showInstructions,
   setShowInstructions,
+  visitedOrder,
   onRunAlgorithm,
   onLoadPreset,
   onResetVisualization,
@@ -299,6 +300,81 @@ const ControlPanel = ({
           <button className="preset-button button" onClick={() => onLoadPreset('grid')}>
             Grid
           </button>
+        </div>
+      </div>
+
+      {/* Traversal Order Display */}
+      {visitedOrder && visitedOrder.length > 0 && (
+        <div className="control-section">
+          <h3 className="section-title">Traversal Order</h3>
+          <div className="traversal-order">
+            <div className="order-sequence">
+              {visitedOrder.map((node, index) => (
+                <span key={index} className="order-node">
+                  {node}
+                  {index < visitedOrder.length - 1 && <span className="order-arrow">→</span>}
+                </span>
+              ))}
+            </div>
+            <div className="order-summary">
+              Total nodes visited: {visitedOrder.length}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts */}
+      <div className="control-section">
+        <h3 className="section-title">Keyboard Shortcuts</h3>
+        <div className="keyboard-shortcuts">
+          <div className="shortcut-group">
+            <h4>Algorithm Controls</h4>
+            <div className="shortcut-item">
+              <kbd>Ctrl+R</kbd> Run Algorithm
+            </div>
+            <div className="shortcut-item">
+              <kbd>Space</kbd> Play/Pause
+            </div>
+            <div className="shortcut-item">
+              <kbd>←</kbd> Previous Step
+            </div>
+            <div className="shortcut-item">
+              <kbd>→</kbd> Next Step
+            </div>
+            <div className="shortcut-item">
+              <kbd>Esc</kbd> Reset/Cancel
+            </div>
+          </div>
+          <div className="shortcut-group">
+            <h4>Graph Operations</h4>
+            <div className="shortcut-item">
+              <kbd>E</kbd> Toggle Edge Mode
+            </div>
+            <div className="shortcut-item">
+              <kbd>Del</kbd> Remove Selected Node
+            </div>
+            <div className="shortcut-item">
+              <kbd>Ctrl+C</kbd> Clear Graph
+            </div>
+          </div>
+          <div className="shortcut-group">
+            <h4>Algorithm Selection</h4>
+            <div className="shortcut-item">
+              <kbd>1</kbd> BFS
+            </div>
+            <div className="shortcut-item">
+              <kbd>2</kbd> DFS (Iterative)
+            </div>
+            <div className="shortcut-item">
+              <kbd>3</kbd> DFS (Recursive)
+            </div>
+          </div>
+          <div className="shortcut-group">
+            <h4>UI Controls</h4>
+            <div className="shortcut-item">
+              <kbd>H</kbd> Toggle Instructions
+            </div>
+          </div>
         </div>
       </div>
 

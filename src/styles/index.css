@@ -402,4 +402,102 @@ body {
   .app-title {
     font-size: 1.5rem;
   }
+}
+
+/* Traversal Order Display */
+.traversal-order {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.order-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.order-node {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.order-arrow {
+  margin: 0 4px;
+  color: #666;
+  font-weight: bold;
+}
+
+.order-summary {
+  color: #888;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+/* Keyboard Shortcuts */
+.keyboard-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.shortcut-group h4 {
+  margin: 0 0 10px 0;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 5px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.shortcut-item kbd {
+  background: linear-gradient(135deg, #333 0%, #444 100%);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  border: 1px solid #555;
+  min-width: 60px;
+  text-align: center;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive adjustments for new components */
+@media (max-width: 768px) {
+  .keyboard-shortcuts {
+    grid-template-columns: 1fr;
+  }
+  
+  .order-sequence {
+    justify-content: center;
+  }
+  
+  .shortcut-item {
+    justify-content: space-between;
+  }
 } 

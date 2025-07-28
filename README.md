@@ -106,12 +106,40 @@ Try different graph structures with one click:
 - **Star**: One central node connected to all others
 - **Grid**: A 2D grid structure
 
+### Keyboard Shortcuts
+
+The application includes comprehensive keyboard shortcuts for faster operation:
+
+#### Algorithm Controls
+- **Ctrl+R**: Run the selected algorithm
+- **Space**: Play/Pause algorithm playback
+- **← (Left Arrow)**: Previous step
+- **→ (Right Arrow)**: Next step
+- **Esc**: Reset visualization and cancel current operations
+
+#### Graph Operations
+- **E**: Toggle edge creation mode
+- **Delete/Backspace**: Remove selected node
+- **Ctrl+C**: Clear entire graph
+
+#### Algorithm Selection
+- **1**: Select BFS algorithm
+- **2**: Select DFS (Iterative) algorithm
+- **3**: Select DFS (Recursive) algorithm
+
+#### UI Controls
+- **H**: Toggle instructions visibility
+
+*Note: Keyboard shortcuts are disabled when typing in input fields.*
+
 ### Advanced Features
 
 - **Context Menus**: Right-click on nodes or edges for delete options
 - **Graph Statistics**: Monitor nodes, edges, connectivity, and degree information
 - **Algorithm State**: View real-time queue/stack contents and visited nodes
 - **Node Selection**: Click nodes to see their degree and neighbor information
+- **Traversal Order**: After algorithm completion, view the complete node traversal sequence
+- **Persistent Node Positions**: Node positions are preserved when adding/removing nodes or edges
 
 ## 🎯 Algorithm Details
 
