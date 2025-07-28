@@ -40,12 +40,16 @@ An interactive React application that visualizes Breadth-First Search (BFS) and 
 ### Prerequisites
 - Node.js (version 14.0.0 or higher)
 - npm (version 6.0.0 or higher)
+- Docker (for containerized deployment)
 
-### Installation & Setup
+### Local Development
 
 1. **Clone or Download the Project**
    ```bash
-   git clone https://github.com/AdidR10/NodeScape-Low_Bias_High_Variance.git
+   # If you have the project as a zip file, extract it
+   # If you have access to a git repository:
+   git clone <repository-url>
+   cd NodeScape-Low_Bias_High_Variance
    ```
 
 2. **Install Dependencies**
@@ -61,6 +65,38 @@ An interactive React application that visualizes Breadth-First Search (BFS) and 
 4. **Open in Browser**
    The application will automatically open in your default browser at `http://localhost:3000`
 
+### Docker Deployment
+
+#### Option 1: Using Docker Compose (Recommended)
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Access the application at http://localhost:3000
+```
+
+#### Option 2: Using Docker directly
+```bash
+# Build the Docker image
+docker build -t nodescape-graph-visualizer .
+
+# Run the container
+docker run -d -p 3000:80 --name nodescape-app nodescape-graph-visualizer
+
+# Access the application at http://localhost:3000
+```
+
+#### Option 3: Using the deployment script
+```bash
+# Make the script executable (first time only)
+chmod +x scripts/deploy.sh
+
+# Run the deployment script
+./scripts/deploy.sh                    # Build and run locally
+./scripts/deploy.sh --remote           # Use latest remote image
+IMAGE_TAG=1.0.5 ./scripts/deploy.sh   # Use specific version
+```
+
 ### Building for Production
 
 To create a production build:
@@ -69,6 +105,85 @@ npm run build
 ```
 
 The build folder will contain optimized files ready for deployment.
+
+## 🐳 Docker & CI/CD
+
+### Docker Image
+
+The application is containerized using a multi-stage Docker build:
+- **Build Stage**: Uses Node.js 18 Alpine to build the React application
+- **Production Stage**: Uses Nginx Alpine to serve the static files
+
+### CI/CD Pipeline
+
+The project includes GitHub Actions for automated CI/CD with dynamic versioning:
+
+1. **Testing**: Runs on every push and pull request
+   - Installs dependencies
+   - Runs tests
+   - Builds the application
+
+2. **Deployment**: Runs on main/dev branch pushes
+   - Builds Docker image with dynamic versioning
+   - Pushes to Docker Hub with multiple tags
+   - Uses GitHub Actions cache for faster builds
+
+### Dynamic Versioning
+
+The CI/CD pipeline automatically generates version numbers based on:
+- **Branch**: Determines the major version prefix
+- **Run Number**: GitHub Actions run number for the build number
+
+**Version Format**:
+- `main` branch: `1.0.{run_number}` (e.g., 1.0.5)
+- `dev` branch: `0.1.{run_number}` (e.g., 0.1.3)
+- Other branches: `0.0.{run_number}` (e.g., 0.0.2)
+
+**Tags Created**:
+- Version tag: `asifmahmoud414/nodescape-graph-visualizer:1.0.5`
+- Latest tag: `asifmahmoud414/nodescape-graph-visualizer:latest` (main branch)
+- Dev tag: `asifmahmoud414/nodescape-graph-visualizer:dev` (dev branch)
+
+### Docker Hub Deployment
+
+To set up automatic deployment to Docker Hub:
+
+1. **Create Docker Hub Account**: Sign up at [Docker Hub](https://hub.docker.com)
+
+2. **Create Access Token**: 
+   - Go to Account Settings → Security
+   - Create a new access token
+
+3. **Add GitHub Secrets**:
+   - Go to your GitHub repository → Settings → Secrets and variables → Actions
+   - Add the following secrets:
+     - `DOCKERHUB_USERNAME`: Your Docker Hub username
+     - `DOCKERHUB_TOKEN`: Your Docker Hub access token
+
+4. **Push to Main Branch**: The CI/CD pipeline will automatically:
+   - Build the Docker image
+   - Push to `your-username/nodescape-graph-visualizer:latest`
+
+### Pulling from Docker Hub
+
+Once the image is pushed to Docker Hub, anyone can run it:
+
+```bash
+# Pull and run the latest image
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:latest
+
+# Run a specific version
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:1.0.5
+
+# Run dev version
+docker run -d -p 3000:80 asifmahmoud414/nodescape-graph-visualizer:dev
+
+# Or use docker-compose with the remote image
+docker-compose -f docker-compose.prod.yml up -d
+
+# Use specific version with environment variables
+IMAGE_TAG=1.0.5 docker-compose -f docker-compose.prod.yml up -d
+```
 
 ## 📖 How to Use
 
