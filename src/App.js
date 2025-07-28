@@ -3,11 +3,36 @@ import { Graph, GraphPresets } from './utils/graph';
 import { GraphAlgorithms } from './utils/graphAlgorithms';
 import GraphVisualization from './components/GraphVisualization';
 import ControlPanel from './components/ControlPanel';
+import AlgorithmExplanation from './components/AlgorithmExplanation';
 
 function App() {
   // Graph state
   const [graph, setGraph] = useState(() => GraphPresets.binaryTree(3));
-  const [nodePositions, setNodePositions] = useState(new Map());
+  const [nodePositions, setNodePositions] = useState(() => {
+    // Generate initial layout only once
+    const initialGraph = GraphPresets.binaryTree(3);
+    const nodes = initialGraph.getNodes();
+    const positions = new Map();
+    
+    if (nodes.length === 0) return positions;
+    
+    const centerX = 400;
+    const centerY = 300;
+    const radius = Math.min(200, 50 + nodes.length * 15);
+    
+    if (nodes.length === 1) {
+      positions.set(nodes[0], { x: centerX, y: centerY });
+    } else {
+      nodes.forEach((node, index) => {
+        const angle = (2 * Math.PI * index) / nodes.length;
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        positions.set(node, { x, y });
+      });
+    }
+    
+    return positions;
+  });
   
   // Algorithm state
   const [currentAlgorithm, setCurrentAlgorithm] = useState('bfs');
@@ -16,6 +41,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(500); // milliseconds
   const [startNode, setStartNode] = useState('A');
+  const [visitedOrder, setVisitedOrder] = useState([]); // Store final traversal order
   
   // UI state
   const [selectedNode, setSelectedNode] = useState(null);
@@ -23,7 +49,7 @@ function App() {
   const [edgeStartNode, setEdgeStartNode] = useState(null);
   const [showInstructions, setShowInstructions] = useState(true);
   
-  // Generate automatic layout for nodes
+  // Generate automatic layout for nodes (only used for presets)
   const generateLayout = useCallback((graph) => {
     const nodes = graph.getNodes();
     const newPositions = new Map();
@@ -52,11 +78,6 @@ function App() {
     setNodePositions(newPositions);
   }, []);
   
-  // Update layout when graph changes
-  useEffect(() => {
-    generateLayout(graph);
-  }, [graph, generateLayout]);
-  
   // Algorithm execution
   const runAlgorithm = useCallback(() => {
     if (!graph.getNodes().includes(startNode)) {
@@ -80,28 +101,33 @@ function App() {
     }
     
     setAlgorithmSteps(result.steps);
+    setVisitedOrder(result.visitedOrder); // Store the traversal order
     setCurrentStepIndex(-1);
     setIsPlaying(false);
   }, [graph, startNode, currentAlgorithm]);
-  
-  // Playback control
-  useEffect(() => {
-    let interval;
-    if (isPlaying && currentStepIndex < algorithmSteps.length - 1) {
-      interval = setInterval(() => {
-        setCurrentStepIndex(prev => {
-          if (prev >= algorithmSteps.length - 1) {
-            setIsPlaying(false);
-            return prev;
-          }
-          return prev + 1;
-        });
-      }, playbackSpeed);
-    }
-    return () => clearInterval(interval);
-  }, [isPlaying, currentStepIndex, algorithmSteps.length, playbackSpeed]);
-  
-  // Graph manipulation handlers
+
+  // Reset functions - MOVED ABOVE useEffect to fix initialization error
+  const resetVisualization = useCallback(() => {
+    setAlgorithmSteps([]);
+    setCurrentStepIndex(-1);
+    setVisitedOrder([]);
+    setIsPlaying(false);
+  }, []);
+
+  const clearGraph = useCallback(() => {
+    setGraph(new Graph());
+    setNodePositions(new Map()); // Clear node positions
+    setAlgorithmSteps([]);
+    setCurrentStepIndex(-1);
+    setVisitedOrder([]);
+    setIsPlaying(false);
+    setSelectedNode(null);
+    setIsAddingEdge(false);
+    setEdgeStartNode(null);
+    setStartNode('A');
+  }, []);
+
+  // Graph manipulation handlers - MOVED ABOVE useEffect
   const handleNodeClick = useCallback((nodeId) => {
     if (isAddingEdge) {
       if (edgeStartNode === null) {
@@ -125,7 +151,7 @@ function App() {
       setSelectedNode(selectedNode === nodeId ? null : nodeId);
     }
   }, [isAddingEdge, edgeStartNode, selectedNode, graph]);
-  
+
   const handleAddNode = useCallback((x, y) => {
     if (isAddingEdge) return;
     
@@ -147,7 +173,7 @@ function App() {
     // Set position for new node
     setNodePositions(prev => new Map(prev.set(nextNodeName, { x, y })));
   }, [graph, isAddingEdge]);
-  
+
   const handleRemoveNode = useCallback((nodeId) => {
     const newGraph = graph.clone();
     newGraph.removeNode(nodeId);
@@ -173,13 +199,13 @@ function App() {
       setCurrentStepIndex(-1);
     }
   }, [graph, selectedNode, startNode]);
-  
+
   const handleRemoveEdge = useCallback((node1, node2) => {
     const newGraph = graph.clone();
     newGraph.removeEdge(node1, node2);
     setGraph(newGraph);
   }, [graph]);
-  
+
   const loadPreset = useCallback((presetName) => {
     let newGraph;
     switch (presetName) {
@@ -206,31 +232,117 @@ function App() {
     }
     
     setGraph(newGraph);
+    generateLayout(newGraph); // Generate layout for preset graphs
     setStartNode(newGraph.getNodes()[0] || 'A');
     setAlgorithmSteps([]);
     setCurrentStepIndex(-1);
+    setVisitedOrder([]); // Clear traversal order
     setIsPlaying(false);
     setSelectedNode(null);
     setIsAddingEdge(false);
     setEdgeStartNode(null);
-  }, []);
+  }, [generateLayout]);
   
-  const resetVisualization = useCallback(() => {
-    setAlgorithmSteps([]);
-    setCurrentStepIndex(-1);
-    setIsPlaying(false);
-  }, []);
+  // Playback control
+  useEffect(() => {
+    let interval;
+    if (isPlaying && currentStepIndex < algorithmSteps.length - 1) {
+      interval = setInterval(() => {
+        setCurrentStepIndex(prev => {
+          if (prev >= algorithmSteps.length - 1) {
+            setIsPlaying(false);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, playbackSpeed);
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying, currentStepIndex, algorithmSteps.length, playbackSpeed]);
   
-  const clearGraph = useCallback(() => {
-    setGraph(new Graph());
-    setAlgorithmSteps([]);
-    setCurrentStepIndex(-1);
-    setIsPlaying(false);
-    setSelectedNode(null);
-    setIsAddingEdge(false);
-    setEdgeStartNode(null);
-    setStartNode('A');
-  }, []);
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Ignore if user is typing in an input field
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT') {
+        return;
+      }
+      
+      switch (event.key.toLowerCase()) {
+        case 'r':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            runAlgorithm();
+          }
+          break;
+        case ' ':
+          event.preventDefault();
+          if (algorithmSteps.length > 0) {
+            setIsPlaying(!isPlaying);
+          }
+          break;
+        case 'arrowleft':
+          event.preventDefault();
+          if (currentStepIndex > 0) {
+            setCurrentStepIndex(currentStepIndex - 1);
+            setIsPlaying(false);
+          }
+          break;
+        case 'arrowright':
+          event.preventDefault();
+          if (currentStepIndex < algorithmSteps.length - 1) {
+            setCurrentStepIndex(currentStepIndex + 1);
+            setIsPlaying(false);
+          }
+          break;
+        case 'escape':
+          event.preventDefault();
+          resetVisualization();
+          setSelectedNode(null);
+          setIsAddingEdge(false);
+          setEdgeStartNode(null);
+          break;
+        case 'e':
+          event.preventDefault();
+          setIsAddingEdge(!isAddingEdge);
+          break;
+        case 'c':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            clearGraph();
+          }
+          break;
+        case 'delete':
+        case 'backspace':
+          event.preventDefault();
+          if (selectedNode) {
+            handleRemoveNode(selectedNode);
+          }
+          break;
+        case '1':
+          event.preventDefault();
+          setCurrentAlgorithm('bfs');
+          break;
+        case '2':
+          event.preventDefault();
+          setCurrentAlgorithm('dfs');
+          break;
+        case '3':
+          event.preventDefault();
+          setCurrentAlgorithm('dfs-recursive');
+          break;
+        case 'h':
+          event.preventDefault();
+          setShowInstructions(!showInstructions);
+          break;
+        default:
+          break;
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [runAlgorithm, algorithmSteps.length, isPlaying, currentStepIndex, resetVisualization, selectedNode, isAddingEdge, clearGraph, handleRemoveNode, showInstructions]);
   
   // Get current step data for visualization
   const getCurrentStepData = () => {
@@ -250,20 +362,7 @@ function App() {
       </header>
       
       <div className="main-content">
-        <GraphVisualization
-          graph={graph}
-          nodePositions={nodePositions}
-          setNodePositions={setNodePositions}
-          selectedNode={selectedNode}
-          isAddingEdge={isAddingEdge}
-          edgeStartNode={edgeStartNode}
-          currentStepData={getCurrentStepData()}
-          onNodeClick={handleNodeClick}
-          onAddNode={handleAddNode}
-          onRemoveNode={handleRemoveNode}
-          onRemoveEdge={handleRemoveEdge}
-        />
-        
+        {/* Control Panel - Left Side */}
         <ControlPanel
           graph={graph}
           currentAlgorithm={currentAlgorithm}
@@ -282,11 +381,37 @@ function App() {
           setIsAddingEdge={setIsAddingEdge}
           showInstructions={showInstructions}
           setShowInstructions={setShowInstructions}
+          visitedOrder={visitedOrder}
           onRunAlgorithm={runAlgorithm}
           onLoadPreset={loadPreset}
           onResetVisualization={resetVisualization}
           onClearGraph={clearGraph}
           currentStepData={getCurrentStepData()}
+        />
+        
+        {/* Graph Visualization - Center */}
+        <GraphVisualization
+          graph={graph}
+          nodePositions={nodePositions}
+          setNodePositions={setNodePositions}
+          selectedNode={selectedNode}
+          isAddingEdge={isAddingEdge}
+          edgeStartNode={edgeStartNode}
+          currentStepData={getCurrentStepData()}
+          onNodeClick={handleNodeClick}
+          onAddNode={handleAddNode}
+          onRemoveNode={handleRemoveNode}
+          onRemoveEdge={handleRemoveEdge}
+        />
+        
+        {/* Algorithm Explanation - Right Side */}
+        <AlgorithmExplanation
+          currentAlgorithm={currentAlgorithm}
+          currentStepData={getCurrentStepData()}
+          algorithmSteps={algorithmSteps}
+          currentStepIndex={currentStepIndex}
+          visitedOrder={visitedOrder}
+          isPlaying={isPlaying}
         />
       </div>
     </div>
