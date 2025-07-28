@@ -1,0 +1,7 @@
+node_modules
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/AdidR10/NodeScape-Low_Bias_High_Variance.git
+git push -u origin main
