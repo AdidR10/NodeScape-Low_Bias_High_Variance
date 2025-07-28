@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  nodescape:
+    image: ${DOCKERHUB_USERNAME:-your-username}/nodescape-graph-visualizer:latest
+    ports:
+      - "3000:80"
+    container_name: nodescape-app-prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production 
