@@ -4,3 +4,4 @@ pandas==1.5.3
 spektral==1.2.0
 flask==2.2.5
 networkx==2.8.8
+flask_cors==3.0.10

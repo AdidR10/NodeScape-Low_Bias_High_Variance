@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: asifmahmoud414/nodescape-frontend:latest
     ports:
       - "3000:80"
     environment:
@@ -17,9 +15,7 @@ services:
       - nodescape-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: asifmahmoud414/nodescape-backend:latest
     ports:
       - "5000:5000"
     environment:
