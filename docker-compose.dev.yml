@@ -8,13 +8,15 @@ services:
     ports:
       - "3000:80"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - REACT_APP_API_URL=http://localhost:5000
     depends_on:
       - backend
     restart: unless-stopped
     networks:
       - nodescape-network
+    volumes:
+      - ./frontend/src:/app/src:ro
 
   backend:
     build:
@@ -23,9 +25,11 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - FLASK_ENV=production
+      - FLASK_ENV=development
       - FLASK_APP=app.py
+      - FLASK_DEBUG=1
     volumes:
+      - ./backend:/app
       - ./backend/lightgin_model_weights.h5:/app/lightgin_model_weights.h5:ro
     restart: unless-stopped
     networks:
