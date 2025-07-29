@@ -80,7 +80,7 @@ const ControlPanel = ({
         console.log('Backend Response:', result.data);
         
         // Map prediction value to graph type
-        const predictionValue = result.data.value;
+        const predictionValue = result.data.prediction;
         let predictionType = '';
         
         switch (predictionValue) {

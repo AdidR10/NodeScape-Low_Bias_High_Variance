@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+    volumes:
+      - ./lightgin_model_weights.h5:/app/lightgin_model_weights.h5:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/predict"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 

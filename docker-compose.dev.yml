@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - nodescape-network
+    volumes:
+      - ./frontend/src:/app/src:ro
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py
+      - FLASK_DEBUG=1
+    volumes:
+      - ./backend:/app
+      - ./backend/lightgin_model_weights.h5:/app/lightgin_model_weights.h5:ro
+    restart: unless-stopped
+    networks:
+      - nodescape-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/predict"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  nodescape-network:
+    driver: bridge 

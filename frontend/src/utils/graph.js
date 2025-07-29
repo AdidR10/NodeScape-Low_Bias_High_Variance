@@ -184,7 +184,7 @@ export class Graph {
     }
   }
 
-  // Get edges in formatted string for console logging
+  // Get edges in formatted string for backend API
   getFormattedEdges() {
     const edges = this.getEdges();
     const formattedEdges = edges.map(([node1, node2]) => {
@@ -201,9 +201,9 @@ export class Graph {
       
       const intNode1 = convertToInt(node1);
       const intNode2 = convertToInt(node2);
-      return `(${intNode1}, ${intNode2})`;
+      return [intNode1, intNode2];
     });
-    return `[${formattedEdges.join(', ')}]`;
+    return JSON.stringify(formattedEdges);
   }
 }
 
