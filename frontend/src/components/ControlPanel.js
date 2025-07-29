@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Square, RotateCcw } from 'lucide-react';
+import { sendPredictionRequest } from '../api/predict';
+import PredictionPopup from './PredictionPopup';
 
 const ControlPanel = ({
   graph,
@@ -28,6 +30,10 @@ const ControlPanel = ({
 }) => {
   const nodes = graph.getNodes();
   const stats = graph.getStatistics();
+  
+  // Popup state
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [prediction, setPrediction] = useState({ type: '', value: 0 });
 
   // Playback control handlers
   const handlePlay = () => {
@@ -59,6 +65,51 @@ const ControlPanel = ({
     setPlaybackSpeed(parseInt(e.target.value));
   };
 
+  // Handle prediction request
+  const handlePredict = async () => {
+    const formattedEdges = graph.getFormattedEdges();
+    
+    // Log to console
+    console.log('Edge List:', formattedEdges);
+    
+    // Send to backend
+    try {
+      const result = await sendPredictionRequest(formattedEdges);
+      
+      if (result.success) {
+        console.log('Backend Response:', result.data);
+        
+        // Map prediction value to graph type
+        const predictionValue = result.data.value;
+        let predictionType = '';
+        
+        switch (predictionValue) {
+          case 0:
+            predictionType = 'Tree';
+            break;
+          case 1:
+            predictionType = 'Cycle';
+            break;
+          case 2:
+            predictionType = 'DAG';
+            break;
+          default:
+            predictionType = 'Unknown';
+        }
+        
+        // Set prediction and show popup
+        setPrediction({ type: predictionType, value: predictionValue });
+        setIsPopupOpen(true);
+      } else {
+        console.error('Backend Error:', result.error);
+        alert('Error getting prediction: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error getting prediction');
+    }
+  };
+
   // Algorithm info
   const algorithmInfo = {
     'bfs': {
@@ -84,7 +135,8 @@ const ControlPanel = ({
   const currentAlgorithmInfo = algorithmInfo[currentAlgorithm];
 
   return (
-    <div className="control-panel">
+    <>
+      <div className="control-panel">
       {/* Instructions */}
       {showInstructions && (
         <div className="control-section">
@@ -259,6 +311,16 @@ const ControlPanel = ({
             onClick={onClearGraph}
           >
             Clear Graph
+          </button>
+        </div>
+        
+        <div style={{ marginBottom: '1rem' }}>
+          <button 
+            className="button secondary"
+            onClick={handlePredict}
+            style={{ width: '100%' }}
+          >
+            Predict
           </button>
         </div>
 
@@ -439,7 +501,15 @@ const ControlPanel = ({
           )}
         </div>
       )}
-    </div>
+      </div>
+      
+      {/* Prediction Popup */}
+      <PredictionPopup 
+        isOpen={isPopupOpen}
+        prediction={prediction}
+        onClose={() => setIsPopupOpen(false)}
+      />
+    </>
   );
 };
 

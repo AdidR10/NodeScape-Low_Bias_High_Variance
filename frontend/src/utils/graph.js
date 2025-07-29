@@ -183,6 +183,28 @@ export class Graph {
       this.addEdge(node1, node2);
     }
   }
+
+  // Get edges in formatted string for console logging
+  getFormattedEdges() {
+    const edges = this.getEdges();
+    const formattedEdges = edges.map(([node1, node2]) => {
+      // Convert letter nodes (A, B, C, ...) to integers (0, 1, 2, ...)
+      const convertToInt = (node) => {
+        if (typeof node === 'string' && node.length === 1) {
+          const charCode = node.charCodeAt(0);
+          if (charCode >= 65 && charCode <= 90) { // A-Z
+            return charCode - 65; // Convert A=0, B=1, C=2, etc.
+          }
+        }
+        return node; // Return as-is if not a single letter
+      };
+      
+      const intNode1 = convertToInt(node1);
+      const intNode2 = convertToInt(node2);
+      return `(${intNode1}, ${intNode2})`;
+    });
+    return `[${formattedEdges.join(', ')}]`;
+  }
 }
 
 // Utility functions for generating preset graphs
