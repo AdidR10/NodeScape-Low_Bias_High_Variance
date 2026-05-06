@@ -4,18 +4,16 @@ NodeScape is a full-stack learning tool for graph algorithms. It combines an int
 
 ![Main UI](frontend/resources/main_ui.png)
 
-## What you can do
+## What it does
 
-**For beginners**
-- Draw your own graphs by clicking on the canvas.
-- Run BFS or DFS step-by-step with play/pause controls.
-- See queue/stack state, visited order, and live graph stats.
+- Draw graphs by clicking on the canvas.
+- Run BFS or DFS step‑by‑step with play/pause controls.
+- See the queue/stack state, visited order, and live graph stats.
 - Use presets (linear, tree, cycle, star, grid) to learn faster.
-
-**For developers**
-- Explore a modern React UI with SVG-based rendering.
+- Explore a modern React UI with SVG‑based rendering.
 - Call a REST API that runs a Graph Neural Network (LightGIN).
 - Deploy everything with Docker Compose or use CI/CD workflows.
+
 
 ## Visual tour
 
@@ -25,7 +23,7 @@ NodeScape is a full-stack learning tool for graph algorithms. It combines an int
 | Traversal order | ![Traversal Order](frontend/resources/traversal_order.png) |
 | Graph statistics | ![Graph Stats](frontend/resources/graph_statistics.png) |
 
-## Quick start (beginner-friendly)
+## Quick start 
 
 ### Option A: Full stack with Docker (recommended)
 
@@ -57,7 +55,7 @@ npm start
 node test-api.js
 ```
 
-## How to use the app (absolute beginner)
+## How to use the app
 
 1. **Add nodes**: Click anywhere on the canvas.
 2. **Connect nodes**: Toggle “Add Edge” mode, then click two nodes.
